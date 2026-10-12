@@ -3,6 +3,8 @@ const router = express.Router();
 
 const magazineController = require('../controllers/magazine');
 
+const { isAuthenticated } = require("../middleware/authenticate");
+
 router.get('/', magazineController.getAll);
 
 router.get('/:id', magazineController.getSingle);

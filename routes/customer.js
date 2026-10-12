@@ -3,6 +3,8 @@ const router = express.Router();
 
 const customerController = require('../controllers/customer');
 
+const { isAuthenticated } = require("../middleware/authenticate");
+
 router.get('/', customerController.getAll);
 
 router.get('/:id', customerController.getSingle);
