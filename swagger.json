@@ -5,7 +5,7 @@
     "description": "Magazine Api",
     "version": "1.0.0"
   },
-  "host": "cse341-project2-x2kb.onrender.com",
+  "host": "final-project-part-2.onrender.com",
   "basePath": "/",
   "schemes": [
     "https"

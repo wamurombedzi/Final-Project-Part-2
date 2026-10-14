@@ -6,8 +6,7 @@ const passport = require('passport');
 const session = require('express-session');
 const cors = require('cors');
 const GitHubStrategy = require('passport-github2').Strategy;
-const magazineController = require('./controllers/magazine');
-const customerController = require('./controllers/customer');
+
 const MemoryStore = require('memorystore')(session)
 
 
