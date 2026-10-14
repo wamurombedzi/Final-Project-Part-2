@@ -1,75 +1,88 @@
 const mongodb = require('../data/database');
-const ObjectId = require('mongodb').ObjectId;
+const CustomerModel = require('../models/Customer');
+const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
 
-const getAll = async (req, res) => {
-    const result = await mongodb.getDatabase().db('project2').collection('customer').find();
-    result.toArray().then((customer) => {
-        res.setHeader('Contet-Type', 'application/json');
-        res.status(200).json(customer);
-    });
+exports.createCustomer = async (req, res) => {
+    try {
+        const { name, email, password, subscriptionPlan } = req.body;
+
+        // Validate input
+        if (!name || !email || !password || !subscriptionPlan) {
+            return res.status(400).send({ error: 'Name, email, password, and subscription plan are required.' });
+        }
+
+        // Hash the password before saving
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const customer = new CustomerModel({ name, email, password: hashedPassword, subscriptionPlan });
+        await customer.save();
+        res.status(201).send(customer);
+    } catch (error) {
+        res.status(500).send({ error: 'Server error while creating customer: ' + error.message });
+    }
 };
 
-const getSingle = async (req, res) => {
-    const customerId = new ObjectId(req.params.id);
-    const result = await mongodb.getDatabase().db('project2').collection('customer').find({_id: customerId});
-    result.toArray().then((customer) => {
-        res.setHeader('Contet-Type', 'application/json');
-        res.status(200).json(customer);
-    });
+exports.getAllCustomers = async (req, res) => {
+    try {
+        const customers = await CustomerModel.find();
+        res.status(200).send(customers);
+    } catch (error) {
+        res.status(500).send({ error: 'Server error while retrieving customers: ' + error.message });
+    }
 };
 
-const createCustomer = async (req, res) => {
-    //#swagger.tags=['customer']
-    const customerId = {
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        subscriptionPlan: req.body.subscriptionPlan,
-        joinedDate: req.body.joinedDate,
-        magazineSubscriber: req.body.magazineSubscriber
-    };
-    const response = await mongodb.getDatabase().db().collection('customer').insertOne(customer);
-    if (response.acknowledged) {
-        res.status(204).send();
-    } else {
-        res.status(500). json(response.error || "Some error occurred while adding the customer.");
-    }
-}
+exports.updateCustomer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const customer = await CustomerModel.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
 
-const updateCustomer = async (req, res) => {
-    //#swagger.tags=['customer']
-    const customerId = new ObjectId(req.params.id);
-    const customer = {
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        subscriptionPlan: req.body.subscriptionPlan,
-        joinedDate: req.body.joinedDate,
-        magazineSubscriber: req.body.magazineSubscriber
-    };
-    const response = await mongodb.getDatabase().db().collection('customer').replaceOne({ _id: customerId }, customer);
-    if (response.modifiedCount > 0) {
-        res.status(204).send();
-    } else {
-        res.status(500). json(response.error || "Some error occurred while updating the customer.");
+        if (!customer) return res.status(404).send({ error: 'Customer not found.' });
+        res.send(customer);
+    } catch (error) {
+        res.status(500).send({ error: 'Server error while updating customer: ' + error.message });
     }
-}
+};
 
-const deleteCustomer = async (req, res) => {
-    //#swagger.tags=['customer']
-    const customerId = new ObjectId(req.params.id);
-    const response = await mongodb.getDatabase().db().collection('customer').deleteOne({ _id: customerId });
-    if (response.deletedCount > 0) {
-        res.status(204).send();
-    } else {
-        res.status(500). json(response.error || "Some error occurred while deleting the customer.");
+exports.deleteCustomer = async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+        const customer = await CustomerModel.findByIdAndDelete(id);
+        if (!customer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+        res.status(204).send(); // No Content
+    } catch (error) {
+        res.status(500).json({ message: 'Server error while deleting customer: ' + error.message });
     }
-}
+};
 
-module.exports = {
-    getAll,
-    getSingle,
-    createCustomer,
-    updateCustomer,
-    deleteCustomer
+// New methods for login and logout
+exports.loginCustomer = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const customer = await CustomerModel.findOne({ email });
+        if (!customer) {
+            return res.status(401).send({ error: 'Invalid email or password.' });
+        }
+
+        const isMatch = await bcrypt.compare(password, customer.password);
+        if (!isMatch) {
+            return res.status(401).send({ error: 'Invalid email or password.' });
+        }
+
+        req.session.user = customer; // Store user in session
+        res.status(200).send({ message: 'Login successful', customer });
+    } catch (error) {
+        res.status(500).send({ error: 'Server error during login: ' + error.message });
+    }
+};
+
+exports.logoutCustomer = (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send({ error: 'Could not log out.' });
+        }
+        res.status(200).send({ message: 'Logout successful' });
+    });
 };

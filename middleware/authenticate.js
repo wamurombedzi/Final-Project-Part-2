@@ -8,4 +8,3 @@ const isAunthenticated = (req, res, next) => {
 module.exports = {
     isAunthenticated
 }
-auth
