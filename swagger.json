@@ -8,8 +8,7 @@
   "host": "final-project-part-2.onrender.com",
   "basePath": "/",
   "schemes": [
-    "http",
-    "https"
+    "http"
   ],
   "paths": {
     "/login": {
