@@ -8,7 +8,8 @@
   "host": "final-project-part-2.onrender.com",
   "basePath": "/",
   "schemes": [
-    "http"
+    "http",
+    "https"
   ],
   "paths": {
     "/login": {
@@ -22,16 +23,6 @@
       }
     },
     "/logout": {
-      "get": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api-docs": {
       "get": {
         "description": "",
         "responses": {
